@@ -26,18 +26,47 @@ interface ShipmentUpdateListenerInterface {
   receiveUpdate(id: string, shipmentData: any);
 }
 
-// Implementation
 class ShipmentUpdateListener implements ShipmentUpdateListenerInterface {
-  queue: []
-
-  constructor() {
-    this.queue = [];
-  }
-
-  async receiveUpdate(id: string, shipmentData: any) {
-    const response = await new ShipmentSearchIndex().updateShipment(id, shipmentData);
-    return response;
+  async receiveUpdate(id: string, shipmentData: any): Promise<void> {
+    await new ShipmentSearchIndex().updateShipment(id, shipmentData);
   }
 }
+
+interface IShipmentUpdateData {
+  id: string;
+  shipmentData: any;
+}
+
+class Queue {
+  queueItems: Array<IShipmentUpdateData>;
+
+  constructor() {
+    this.queueItems = [];
+  }
+
+  add(id: string, shipmentData: any): void {
+    this.queueItems.push({ id, shipmentData });
+  }
+
+  async process(): Promise<void> {
+    const s = new ShipmentUpdateListener();
+    for (const item of this.queueItems) {
+      await s.receiveUpdate(item.id, item.shipmentData);
+    }
+  }
+}
+
+const queue = new Queue();
+queue.add("1", 1);
+queue.add("1", 2);
+queue.add("1", 3);
+queue.add("1", 4);
+queue.add("1", 5);
+queue.add("2", 1);
+queue.add("2", 2);
+queue.add("2", 3);
+queue.add("2", 4);
+queue.add("2", 5);
+queue.process();
 
 export default ShipmentUpdateListener;
